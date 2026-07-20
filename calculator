@@ -1,0 +1,95 @@
+import sys
+
+# Define operator precedence: Higher number = higher priority
+PRECEDENCE = {
+    '+': 1,
+    '-': 1,
+    '*': 2,
+    '/': 2
+}
+
+def tokenize(expression: str) -> list:
+    """
+    Phase 1: Breaks a string into individual tokens (numbers, operators, parens).
+    Handles multi-digit numbers and discards spaces.
+    """
+    tokens = []
+    chars = list(expression.replace(" ", "")) # Strip spaces completely
+    i = 0
+    
+    while i < len(chars):
+        char = chars[i]
+        
+        # If it's a digit, we need to loop forward to grab the whole number
+        if char.isdigit() or char == '.':
+            number_buffer = ""
+            while i < len(chars) and (chars[i].isdigit() or chars[i] == '.'):
+                number_buffer += chars[i]
+                i += 1
+            tokens.append(number_buffer)
+            continue # Skip the i += 1 at the bottom since the inner loop advanced i
+            
+        elif char in PRECEDENCE or char in ['(', ')']:
+            tokens.append(char)
+            
+        else:
+            # Cybersecurity mindset: Reject unexpected input immediately
+            print(f"Malformed Input Error: Invalid character detected: '{char}'")
+            sys.exit(1)
+            
+        i += 1
+        
+    return tokens
+
+def shunting_yard(tokens: list) -> list:
+    """
+    Phase 2: Converts infix notation tokens to postfix (Reverse Polish Notation)
+    using Dijkstra's Shunting-Yard algorithm.
+    """
+    output_queue = []
+    operator_stack = []
+    
+    for token in tokens:
+        # 1. If the token is a number, add it to the output queue
+        if token.replace('.', '', 1).isdigit():
+            output_queue.append(token)
+            
+        # 2. If the token is a left parenthesis, push it onto the stack
+        elif token == '(':
+            operator_stack.append(token)
+            
+        # 3. If it's a right parenthesis, pop operators off the stack until matching '('
+        elif token == ')':
+            while operator_stack and operator_stack[-1] != '(':
+                output_queue.append(operator_stack.pop())
+            if not operator_stack:
+                print("Syntax Error: Mismatched parentheses.")
+                sys.exit(1)
+            operator_stack.pop() # Remove the left parenthesis '('
+            
+        # 4. If it's an operator
+        elif token in PRECEDENCE:
+            while (operator_stack and operator_stack[-1] in PRECEDENCE and 
+                   PRECEDENCE[operator_stack[-1]] >= PRECEDENCE[token]):
+                output_queue.append(operator_stack.pop())
+            operator_stack.append(token)
+            
+    # Pop any remaining operators from the stack to the queue
+    while operator_stack:
+        if operator_stack[-1] == '(':
+            print("Syntax Error: Mismatched parentheses.")
+            sys.exit(1)
+        output_queue.append(operator_stack.pop())
+        
+    return output_queue
+
+# --- Test Bench ---
+if __name__ == "__main__":
+    test_input = "3.5 + (4 * 12) - 2"
+    print(f"Original Input: {test_input}")
+    
+    clean_tokens = tokenize(test_input)
+    print(f"Phase 1 (Tokens):  {clean_tokens}")
+    
+    postfix_queue = shunting_yard(clean_tokens)
+    print(f"Phase 2 (Postfix): {postfix_queue}")
