@@ -1,0 +1,18 @@
+=== Custom CLI Parsing Calculator ===
+Type your math expressions (e.g., 3 + (4 * 5) - 2). Type 'exit' to quit.
+
+calc > 3+2
+= 5
+calc > 4x3
+Malformed Input Error: Invalid character detected: 'x'
+calc > 4 x 32
+Malformed Input Error: Invalid character detected: 'x'
+calc > 3 * 4
+= 12
+calc > 4 * 7
+= 28
+calc > 10000000 * 3000
+= 30000000000
+calc > 5000000000 * 4
+= 20000000000
+calc >
